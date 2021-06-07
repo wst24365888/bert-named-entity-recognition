@@ -36,4 +36,4 @@ This is a term project of Web Intelligence and Message Understanding, NCU 2021.
     conda install numba
     ```
 
-3. Paste conda.pth to your `site-packages` folder.
+3. Change package path in `conda.pth` and paste it into your `site-packages` folder of this env.

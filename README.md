@@ -1,4 +1,4 @@
-# HW3
+# BERT Named Entity Recognition
 
 ## About
 

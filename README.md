@@ -10,7 +10,7 @@ This is a term project of Web Intelligence and Message Understanding, NCU 2021.
 
 2. Setup env and install packages.
 
-    ``` powershell=
+    ``` powershell
     conda activate wimuta_hw3_ner_env
     conda env list
     conda create --name wimuta_hw3_ner_env python=3.7
@@ -37,3 +37,13 @@ This is a term project of Web Intelligence and Message Understanding, NCU 2021.
     ```
 
 3. Change package path in `conda.pth` and paste it into your `site-packages` folder of this env.
+
+4. Run `main.py`.
+
+5. Install [Perl](https://www.perl.org/get.html).
+
+6. Run evaluate code.
+
+    ``` powershell
+    perl .\conlleval.pl "<" .\data\example_datasets_msra\label_test_output.txt
+    ```

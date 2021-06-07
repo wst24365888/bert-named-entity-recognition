@@ -1,0 +1,11 @@
+**/__pycache__/
+dist/
+build/
+.idea/
+*.egg-info/
+*.pyc
+
+.python-version
+.venv/
+.ipynb_checkpoints
+.coverage

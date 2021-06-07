@@ -1,0 +1,57 @@
+sudo: false
+language: python
+python:
+    - "3.6"
+dist: trusty
+
+# Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
+matrix:
+    include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+
+env:
+    - PEP8_IGNORE="E221,E501,W504,W391,E241"
+
+# command to install dependencies
+install:
+    - pip install --upgrade pip setuptools
+    - pip install tensorflow
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+
+# command to run tests
+# require 100% coverage (not including test files) to pass Travis CI test
+# To skip pypy: - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then DOSTUFF ; fi
+script:
+    - export MAJOR_PYTHON_VERSION=`echo $TRAVIS_PYTHON_VERSION | cut -c 1`
+    - coverage run --source=bert
+                   $(which nosetests) -v
+                   --with-doctest tests/
+                   --exclude-dir tests/nonci/
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then coverage report --show-missing --fail-under=60 --omit "bert/tokenization/*_tokenization.py" ; fi
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then pycodestyle --ignore=$PEP8_IGNORE  --exclude=tests,.venv -r --show-source . ; fi
+    # For convenience, make sure simple test commands work
+    - python setup.py develop
+    # - py.test
+    # - nosetests -e tests.nonci.*
+
+# load coverage status to https://coveralls.io
+after_success:
+    - 'echo travis-python: $TRAVIS_PYTHON_VERSION'
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then pip install coveralls; COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN coveralls ; fi
+
+notifications:
+  email: false
+  
+deploy:
+  provider: pypi
+  username: "__token__"
+  password:
+    secure: vk0//gdQP/beFjOZ2S9nBOgCwTFGROPKvzjZUfZCoE1eeI6w+PKY37dqYhglglum0Hdz8MJUqpzNkmLroPbS/7J7g+EnSMXV/aPmteCPv5xwwBbUPTlaJN3Amx3MNERiOXjliDUeDXyBFZOO55pF5Ytqv2PKH6StAaNAxtOETb23tEA7xlC2wX1/lhKA31jGqTwmEQKQMc77mvXjTugvjjwrWe0C7ijOjzGu8TypR52VEFdM+m1/KFlU1sajD6BwWcYk15uLbrJS87bN37RtQWnzJo39sQvckj397TLlSaroALp9cLONZBriEZOgEYK3k4KxdbzhiT9HYKGLO050LmGzH1bXOeZ0FTrqejcUiOOjCkBQGSlOyiOaZcWXXrMgwlgyQY+Nsl40hzUhNfkJIahoUsg/LlTjkPd5GWCOaNrbfdU2Q2hHAPRWJh03mg1uE5nXZbqeMEf3wjgfjqGQHQP6aWt/tDjOM7flnjvJOaKZRQxscTwGzMCDH1aZEsDny+d8TmnENb7/pcGHL811HlQe+wzMAND9si+BrbPet3vIi1HuJKfwT+DJWDi/Jwur+vpgSxBgeQDlobPAm06hRxpqhTZS0xda48PVII07wDJl+L5Q3r8fM6eV9akj3Xx+zOdUiqO74pFQDF+UhCiEXroR8CMilJzTt2WJIFPtu8E=
+  on:
+    tags: true
+    branch: master
+    condition: "$TRAVIS_PYTHON_VERSION = 3.7"
+  skip_existing: true

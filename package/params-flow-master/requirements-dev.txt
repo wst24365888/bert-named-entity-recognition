@@ -1,0 +1,7 @@
+coverage
+docutils
+nose
+nose-exclude
+Pygments
+pycodestyle
+

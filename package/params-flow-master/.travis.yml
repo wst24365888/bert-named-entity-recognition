@@ -1,0 +1,53 @@
+sudo: false
+language: python
+python:
+    - "3.6"
+
+# Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
+matrix:
+    include:
+    - python: 3.7
+      sudo: true
+
+env:
+    - PEP8_IGNORE="E221,E501,W504,W391"
+
+# command to install dependencies
+install:
+    - pip install --upgrade pip
+    - pip install 'tensorflow<2.2'
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+
+# command to run tests
+# require 100% coverage (not including test files) to pass Travis CI test
+# To skip pypy: - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then DOSTUFF ; fi
+script:
+    - export MAJOR_PYTHON_VERSION=`echo $TRAVIS_PYTHON_VERSION | cut -c 1`
+    - coverage run --source=params_flow $(which nosetests)
+                   --with-doctest tests/
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then coverage report --show-missing --fail-under=90 ; fi
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then pycodestyle --ignore=$PEP8_IGNORE  --exclude=tests,.venv -r --show-source . ; fi
+    # For convenience, make sure simple test commands work
+    - python setup.py develop
+    - py.test
+    - nosetests
+
+# load coverage status to https://coveralls.io
+after_success:
+    - 'echo travis-python: $TRAVIS_PYTHON_VERSION'
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then pip install coveralls; COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN coveralls ; fi
+
+notifications:
+  email: false
+  
+deploy:
+  provider: pypi
+  username: "__token__"
+  password:
+    secure: J9e7I3gSuNQEtcOX4Bb1CONL6EjDwfUtyNrI5TysIwl5balrwyVkJ73zGlWYXwqTQwh6Pry0AsD/pnFnZFdycjtupVB0a0rTeg8uMAwYUQaevnR46fMiqH9fOtiIDD/ujeznQTy3RqEIAFx4cSl+AIDXaUJJ29tjPC++AMorbJ2Re5hsN8HPQbRz4HrbRkoOHJMf+VvFjquZZSh3f28RJLYPcbSRvkoQoEvqzofduYg396r66vzQfIDuiJZsxhGS35Hd1l238oDUUZDIHe/Nf0A1m1+D4RVcwtE6+fBFPnPRDxLYwWFIvHRWAfiK8a4yHydUxfr6VzgtKx/aq/6LaDUu5SzLGBysjV4wqYg5ExnbENWr/+jT+JvAgR88J6CcoDwfk3RrU6esyJQVbmJDef4SKbo6hHCezkez7VKMdlXtx7rH8iKy9fFQYT73ao8NhvnKpI2oOGHr4NHOsgcSWPLVFWxgsBKYervzMC+V6YcixEYo69IdwRwITtVusrtAPC/1yN3OqHTeiL0Puon9VKvfXLZNeNck7tJaXzJ3ePvIJZOuLNNMQdiRSox8UPBXNzKlFsdHEsSIbxGAR7ODEilyZlm+N+xTI08Xps9cDDyK+MlSpxa5vtZNqTqkW5lzWdU/T+oSsdxgZ3m/fTS4kc5XNuEL/ynbMzFCj+omt8M=
+  on:
+    tags: true
+    branch: master
+    condition: "$TRAVIS_PYTHON_VERSION = 3.7"
+  skip_existing: true
